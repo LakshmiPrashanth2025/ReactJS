@@ -13,15 +13,23 @@ The implementation follows a secure frontend-to-backend payment workflow used in
 ```text
 React Frontend
       ↓
-Load Razorpay Checkout SDK
+Load Razorpay Checkout Script
       ↓
-Backend API
+Call Backend API
       ↓
-Razorpay Order Creation
+Backend Creates Razorpay Order
       ↓
-Razorpay Checkout Popup
+Return Order Details
       ↓
-Payment Verification
+Open Razorpay Payment Popup
+      ↓
+User Completes Payment
+      ↓
+Receive Payment Response
+      ↓
+Backend Payment Verification
+      ↓
+Payment Success
 ```
 
 ---
