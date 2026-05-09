@@ -1,8 +1,10 @@
 # Razorpay Payment Integration using ReactJS
 
-This project demonstrates a complete Razorpay Payment Gateway Integration using ReactJS for the frontend and a backend service for secure order creation and payment verification.
+This project demonstrates a complete Razorpay Payment Gateway Integration using ReactJS.
 
-The application follows the standard and secure Razorpay payment workflow used in real-world production systems.
+The application dynamically loads the Razorpay Checkout SDK, creates a payment order, opens the Razorpay payment popup, and securely handles the payment response.
+
+The implementation follows a secure frontend-to-backend payment workflow used in modern production applications.
 
 ---
 
@@ -11,9 +13,11 @@ The application follows the standard and secure Razorpay payment workflow used i
 ```text
 React Frontend
       ↓
-Backend API (Node/Express or Spring Boot)
+Load Razorpay Checkout SDK
       ↓
-Razorpay Server APIs
+Backend API
+      ↓
+Razorpay Order Creation
       ↓
 Razorpay Checkout Popup
       ↓
@@ -27,7 +31,9 @@ Payment Verification
 ```text
 Click Pay
    ↓
-Call Backend
+Load Razorpay SDK
+   ↓
+Call Backend API
    ↓
 Create Razorpay Order
    ↓
@@ -35,11 +41,11 @@ Receive Order ID
    ↓
 Open Razorpay Checkout
    ↓
-User Pays
+User Completes Payment
    ↓
-Receive payment_id + signature
+Receive Payment Response
    ↓
-Verify on Backend
+Verify Payment Signature
    ↓
 Payment Success
 ```
@@ -55,38 +61,101 @@ Payment Success
 The payment process starts when the user clicks the payment button.
 
 ```html
-<button onClick={handlePayment}>
+<button onClick={paymentHandler}>
    Pay Now
 </button>
 ```
 
-This triggers the main payment function in React.
+This triggers the main payment function.
 
 ---
 
-# 2. Frontend Calls Backend API
+# 2. Dynamically Load Razorpay Checkout SDK
 
-The frontend should NEVER directly create Razorpay orders using secret keys.
-
-Instead, React sends a request to the backend:
+The project dynamically loads the Razorpay Checkout script from Razorpay CDN.
 
 ```javascript
-axios.post("/create-order", {
-   amount: 500
-})
+const paymentHandler = async (e) => {
+    e.preventDefault();
+
+    // Load Razorpay checkout script
+    const res = await loadScript(
+      "https://checkout.razorpay.com/v1/checkout.js"
+    );
+
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+}
 ```
 
-## Why Backend Order Creation?
+---
+
+# Why Dynamically Load SDK?
+
+Benefits:
+
+- Reduces initial page load size
+- Loads Razorpay only when payment starts
+- Improves performance
+- Avoids unnecessary script loading
+
+---
+
+# 3. Load Script Utility Function
+
+The project uses a helper function to dynamically inject the Razorpay script into the webpage.
+
+```javascript
+const loadScript = (src) => {
+  return new Promise((resolve) => {
+
+    const script = document.createElement("script");
+
+    script.src = src;
+
+    script.onload = () => {
+      resolve(true);
+    };
+
+    script.onerror = () => {
+      resolve(false);
+    };
+
+    document.body.appendChild(script);
+
+  });
+};
+```
+
+---
+
+# 4. Frontend Calls Backend API
+
+After loading the SDK successfully, React calls the backend API to create a Razorpay order.
+
+```javascript
+const result = await axios.post("/payment/orders", {
+   amount: 500
+});
+```
+
+The backend creates the Razorpay order securely.
+
+---
+
+# Why Backend Order Creation?
 
 Because:
 
 - Razorpay Secret Key must remain secure
-- Prevents payment tampering
+- Prevents amount tampering
 - Ensures secure transaction processing
 
 ---
 
-# 3. Backend Creates Razorpay Order
+# 5. Backend Creates Razorpay Order
 
 The backend creates an order using Razorpay SDK.
 
@@ -94,8 +163,8 @@ The backend creates an order using Razorpay SDK.
 const Razorpay = require("razorpay");
 
 const razorpay = new Razorpay({
-   key_id: process.env.KEY_ID,
-   key_secret: process.env.KEY_SECRET
+   key_id: process.env.RAZORPAY_KEY_ID,
+   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
 const options = {
@@ -127,35 +196,42 @@ Backend returns:
 
 ---
 
-# 4. React Opens Razorpay Checkout
+# 6. Configure Razorpay Checkout
 
-React receives the order details and configures Razorpay Checkout.
+Frontend receives the order details and configures Razorpay Checkout.
 
 ```javascript
 const options = {
-   key: "rzp_test_xxx",
+   key: "rzp_test_xxxxx",
    amount: order.amount,
    currency: "INR",
    name: "Your Company",
    description: "Test Transaction",
    order_id: order.id,
+
+   handler: function(response) {
+      console.log(response);
+   }
 };
-```
-
-Then opens the Razorpay popup:
-
-```javascript
-const razor = new window.Razorpay(options);
-razor.open();
 ```
 
 ---
 
-# 5. User Completes Payment
+# 7. Open Razorpay Payment Popup
 
-Razorpay securely handles payment processing.
+Once configured, the payment popup is opened.
 
-Supported methods:
+```javascript
+const paymentObject = new window.Razorpay(options);
+
+paymentObject.open();
+```
+
+---
+
+# 8. User Completes Payment
+
+Razorpay securely processes payment using:
 
 - UPI
 - Credit Card
@@ -163,11 +239,11 @@ Supported methods:
 - Wallet
 - Net Banking
 
-The application never directly handles card details.
+The application never directly handles sensitive card details.
 
 ---
 
-# 6. Razorpay Returns Payment Response
+# 9. Razorpay Returns Payment Response
 
 After successful payment:
 
@@ -191,7 +267,7 @@ These values are essential for verification.
 
 ---
 
-# 7. Payment Verification (MOST IMPORTANT STEP)
+# 10. Payment Verification (MOST IMPORTANT STEP)
 
 This is the core security layer.
 
@@ -259,6 +335,12 @@ This prevents:
 
 # Frontend Components
 
+## Dynamic SDK Loading
+
+```javascript
+loadScript()
+```
+
 ## Payment Button
 
 ```html
@@ -287,6 +369,12 @@ handler(response)
 
 # Backend Components
 
+## Razorpay SDK
+
+```javascript
+const Razorpay = require("razorpay");
+```
+
 ## Razorpay Instance
 
 ```javascript
@@ -299,13 +387,13 @@ new Razorpay({
 ## Order Creation API
 
 ```text
-/orders
+/payment/orders
 ```
 
 ## Payment Verification API
 
 ```text
-/verify
+/payment/verify
 ```
 
 ---
@@ -419,6 +507,8 @@ Send payment receipt to customer.
 ```text
 React App
    ↓
+Load Razorpay SDK
+   ↓
 API Gateway
    ↓
 Payment Service
@@ -443,6 +533,7 @@ Notification Service
 | Payment Gateway | Razorpay |
 | Backend | Node.js / Express |
 | Security | HMAC SHA256 |
+| SDK Loading | Dynamic Script Injection |
 | Checkout UI | Razorpay Checkout |
 
 ---
@@ -470,8 +561,8 @@ This greatly reduces security complexity.
 - Razorpay Node.js Integration Docs  
   https://razorpay.com/docs/payments/server-integration/nodejs/integration-steps/
 
-- Razorpay React Integration  
-  https://www.npmjs.com/package/react-razorpay
+- Razorpay Checkout Documentation  
+  https://razorpay.com/docs/payments/payment-gateway/web-integration/
 
 - Razorpay Official Website  
   https://razorpay.com/
@@ -480,17 +571,15 @@ This greatly reduces security complexity.
 
 # Summary
 
-This project demonstrates a secure and scalable payment gateway integration using:
+This project demonstrates a secure and scalable Razorpay payment integration using:
 
 - ReactJS
-- Razorpay Checkout
+- Dynamic Razorpay SDK Loading
 - Backend Order Creation
+- Razorpay Checkout Popup
 - Signature Verification
 - Secure Payment Processing
 
 It follows the same architecture used in modern production payment systems.
 
 ---
-
----
-````
