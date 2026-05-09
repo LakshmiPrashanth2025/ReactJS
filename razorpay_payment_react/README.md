@@ -1,4 +1,3 @@
-````markdown
 # Razorpay Payment Integration using ReactJS
 
 This project demonstrates a complete Razorpay Payment Gateway Integration using ReactJS for the frontend and a backend service for secure order creation and payment verification.
@@ -55,7 +54,7 @@ Payment Success
 
 The payment process starts when the user clicks the payment button.
 
-```jsx
+```html
 <button onClick={handlePayment}>
    Pay Now
 </button>
@@ -71,7 +70,7 @@ The frontend should NEVER directly create Razorpay orders using secret keys.
 
 Instead, React sends a request to the backend:
 
-```js
+```javascript
 axios.post("/create-order", {
    amount: 500
 })
@@ -91,7 +90,7 @@ Because:
 
 The backend creates an order using Razorpay SDK.
 
-```js
+```javascript
 const Razorpay = require("razorpay");
 
 const razorpay = new Razorpay({
@@ -132,7 +131,7 @@ Backend returns:
 
 React receives the order details and configures Razorpay Checkout.
 
-```js
+```javascript
 const options = {
    key: "rzp_test_xxx",
    amount: order.amount,
@@ -145,7 +144,7 @@ const options = {
 
 Then opens the Razorpay popup:
 
-```js
+```javascript
 const razor = new window.Razorpay(options);
 razor.open();
 ```
@@ -172,7 +171,7 @@ The application never directly handles card details.
 
 After successful payment:
 
-```js
+```javascript
 handler: function(response) {
    console.log(response);
 }
@@ -182,9 +181,9 @@ Response contains:
 
 ```json
 {
-   razorpay_payment_id,
-   razorpay_order_id,
-   razorpay_signature
+   "razorpay_payment_id": "pay_xxxxx",
+   "razorpay_order_id": "order_xxxxx",
+   "razorpay_signature": "signature_xxxxx"
 }
 ```
 
@@ -213,14 +212,14 @@ HMAC SHA256
 
 Logic:
 
-```js
+```javascript
 generated_signature =
    HMAC_SHA256(order_id + "|" + payment_id, secret)
 ```
 
 Then compare with:
 
-```js
+```javascript
 razorpay_signature
 ```
 
@@ -262,25 +261,25 @@ This prevents:
 
 ## Payment Button
 
-```jsx
+```html
 <button>Pay</button>
 ```
 
 ## Axios API Call
 
-```js
+```javascript
 axios.post()
 ```
 
 ## Razorpay Checkout
 
-```js
+```javascript
 new window.Razorpay(options)
 ```
 
 ## Success Handler
 
-```js
+```javascript
 handler(response)
 ```
 
@@ -290,7 +289,7 @@ handler(response)
 
 ## Razorpay Instance
 
-```js
+```javascript
 new Razorpay({
    key_id,
    key_secret
@@ -490,6 +489,8 @@ This project demonstrates a secure and scalable payment gateway integration usin
 - Secure Payment Processing
 
 It follows the same architecture used in modern production payment systems.
+
+---
 
 ---
 ````
