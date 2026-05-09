@@ -62,7 +62,7 @@ Payment Success
 
 ## Payment Flow Sequence Diagram
 
-![Razorpay Payment Integration Sequence Diagram](./images/razorpay-sequence-diagram.png)
+![Razorpay Payment Integration Sequence Diagram](./images/RazorPayCheckout.png)
 
 ---
 
