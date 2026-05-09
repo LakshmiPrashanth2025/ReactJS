@@ -60,6 +60,12 @@ Payment Success
 
 ---
 
+## Payment Flow Sequence Diagram
+
+![Razorpay Payment Integration Sequence Diagram](./images/razorpay-sequence-diagram.png)
+
+---
+
 # Step-by-Step Logic Explanation
 
 ---
